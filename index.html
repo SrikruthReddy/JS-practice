@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Distance Calculator</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+
+        let marker1 = null;
+        let marker2 = null;
+        // function to calculate the haversine distance between two points
+        function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+            const earthRadius = 6371; // Radius of the Earth in kilometers
+
+            // Convert latitude and longitude to radians
+            const lat1Rad = toRadians(lat1);
+            const lon1Rad = toRadians(lon1);
+            const lat2Rad = toRadians(lat2);
+            const lon2Rad = toRadians(lon2);
+
+            // Difference between the latitudes and longitudes
+            const deltaLat = lat2Rad - lat1Rad;
+            const deltaLon = lon2Rad - lon1Rad;
+
+            // Haversine formula
+            const a = Math.sin(deltaLat / 2) ** 2 + Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(deltaLon / 2) ** 2;
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+            // Calculate the distance
+            const distance = earthRadius * c;
+            
+            return distance;
+        }
+
+        function toRadians(degrees) {
+            return degrees * (Math.PI / 180);
+        }
+
+// Example usage
+// const lat1 = 52.5200; // Latitude of point 1
+// const lon1 = 13.4050; // Longitude of point 1
+// const lat2 = 48.8566; // Latitude of point 2
+// const lon2 = 2.3522;  // Longitude of point 2
+
+// const distance = calculateHaversineDistance(lat1, lon1, lat2, lon2);
+// console.log(distance); // Output: 876.536 km
+
+
+        // add event listener to form
+        function handleSubmit(event) {
+            event.preventDefault();
+            const lat1 = document.querySelector('input[name="lat1"]').value;
+            const lon1 = document.querySelector('input[name="lon1"]').value;
+            const lat2 = document.querySelector('input[name="lat2"]').value;
+            const lon2 = document.querySelector('input[name="lon2"]').value;
+            if(lat1 == '' || lon1 == '' || lat2 == '' || lon2 == '') {
+                alert('Please enter all values');
+                return;
+            }
+            if(marker1 == null)
+                marker1 = L.marker([lat1, lon1]).addTo(map);
+            if(marker2 == null)
+                marker2 = L.marker([lat2, lon2]).addTo(map);
+            const distance = calculateHaversineDistance(lat1, lon1, lat2, lon2);
+            document.getElementById('distance').innerHTML = 'Distance: ' + distance.toFixed(2) + ' km';
+        }
+        
+
+        
+    </script>
+</head>
+<body >
+    <h1 style="position: absolute; left: 38%; font-family: Helvetica; ">Distance Calculator</h1>
+    <form id="form" onsubmit="handleSubmit(event)">
+        <p> Co-ordinates of first location: </p><input type="text" name="lat1" placeholder="Latitude 1" />
+        <input type="text" name="lon1" placeholder="Longitude 1" />
+        <br/>
+        <p>Co-ordinatesn of second location: </p><input type="text" name="lat2" placeholder="Latitude 2" />
+        <input type="text" name="lon2" placeholder="Longitude 2" />
+        <p id="distance">Distance: </p>
+
+        <p><input type="submit" value="Submit" />
+        <input type="reset" value="Reset" id = "reset" />
+        </p>
+    </form>
+    <div id="map" style="height: 400px; margin: top 50px; border-color: black; padding-left: 50px; padding-right: 50px;"></div>
+    <p style="position: fixed;
+    bottom: 10px;
+    left: 10px;">(Note: you can enter both locations manually or select both on map)</p>
+    <script>
+        var map = L.map('map').setView([51.505, -0.09], 13);
+
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        map.on('click', onMapClick);
+        let count = 0;
+        function onMapClick(e) {
+            alert("You clicked the map at " + e.latlng);
+            if(count == 2)
+            {
+                alert("You have already selected two points");
+                return;
+            }
+            if(count == 0) {
+                document.querySelector('input[name="lat1"]').value = e.latlng.lat;
+                document.querySelector('input[name="lon1"]').value = e.latlng.lng;
+                marker1 = L.marker(e.latlng).addTo(map);
+            }
+            if(count == 1) {
+                document.querySelector('input[name="lat2"]').value = e.latlng.lat;
+                document.querySelector('input[name="lon2"]').value = e.latlng.lng;
+                marker2 = L.marker(e.latlng).addTo(map);
+            }
+
+            count++;
+        }
+        document.getElementById('reset').addEventListener('click', function() {
+            document.querySelector('input[name="lat1"]').value = '';
+            document.querySelector('input[name="lon1"]').value = '';
+            document.querySelector('input[name="lat2"]').value = '';
+            document.querySelector('input[name="lon2"]').value = '';
+            count = 0;
+            if(marker1 != null) {
+                map.removeLayer(marker1);
+            }
+            if(marker2 != null) {
+                map.removeLayer(marker2);
+            }
+        });
+        
+    </script>
+</body>
+</html>
